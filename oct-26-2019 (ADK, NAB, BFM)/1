@@ -1,0 +1,56 @@
+//class to ramdomaize values
+class tb_driver;
+	rand bit [7:0]  a,b;
+	virtual serial_adder_if vif;
+    int pass=0,fail=0;
+
+task drive();
+		this.randomize();
+        vif.a=this.a;
+		vif.b=this.b;
+		//reset (with clock cycle)
+		vif.clk=1'b0;
+		vif.reset=1'b1;//active high
+		vif.shift_load=1'b0;
+		#10 vif.clk=1'b1;
+		#10 vif.clk=1'b0;
+		vif.reset=1'b0;//active high
+		vif.shift_load=1'b1; // get ready to shift
+		#10 vif.clk=1'b1; // second clock to load A and B
+    
+		// Now the values have beed loaded to the registers
+		//start shifting values (we need 9 clocks, so 18 iter.)
+		repeat (18) begin
+			#10 vif.clk= ~ vif.clk;
+            //$display("sum = %d",sum);
+		end
+		
+
+endtask: drive;
+
+
+function check();
+    logic [8:0] ans;
+	//calculate the expected value
+	ans = this.vif.a+this.vif.b;
+	//check if it's pass or fail and monitor the pass-fail counts
+	if (ans == this.vif.sum) begin
+		//$display("PASS=> A=%0d, B=%0d, Sum=%0d",this.vif.a,this.vif.b,this.vif.sum);
+		this.pass++;
+	end
+	else begin
+		$error("Fail. (A=%d,B=%d) expected = %d, actual = %d",this.vif.a,this.vif.b,ans,this.vif.sum);
+		this.fail++;
+	end	
+
+
+endfunction: check;
+
+	function summary();
+		//diplay the run summary
+		$display("\n==========================================================================\n");
+		$display("Pass = %0d, fail = %0d => total # of iterations is %0d 		",pass,fail,pass+fail);
+		$display("\n==========================================================================\n");
+
+	endfunction: summary;
+endclass

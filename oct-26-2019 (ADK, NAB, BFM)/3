@@ -1,0 +1,8 @@
+//define interface of in/out signals
+interface serial_adder_if;
+  logic  clk;
+  logic reset;
+  logic shift_load;
+  logic [7:0] a,b;
+  logic [8:0] sum;
+endinterface: serial_adder_if

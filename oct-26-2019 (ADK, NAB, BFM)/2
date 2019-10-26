@@ -1,0 +1,79 @@
+module serial_adder( a, b, clk, shift_load, reset, sum);
+
+  input [7:0] a,b;
+  input clk, reset,shift_load;
+  output reg [8:0] sum;
+
+  reg [3:0] count;
+  reg enable;
+  wire wire_a, wire_b, cout, cin, wire_s; 
+ 
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      enable <= 1; count <= 0; sum <=8'b0;
+    end
+    else begin
+      if (count >8)
+        enable <= 0;
+      else begin
+        if (enable & shift_load) begin
+          #1;
+          count <= count + 1;
+          sum<={wire_s,sum[8:1]};
+        end
+      end
+    end
+  end
+ 
+  PISO piso_a(clk,a,shift_load,wire_a); 
+  PISO piso_b(clk,b,shift_load,wire_b); 
+  FA fa(wire_a, wire_b, cin, wire_s, cout);
+  dff d(cout, clk, enable, reset, cin);
+ 
+  
+endmodule
+
+module PISO (clk,din,shift_load,dout); 
+  input clk, shift_load; 
+  input [7:0] din; 
+  output reg dout;   
+  reg [7:0]temp;
+  
+  always @(posedge clk) begin
+    if(~shift_load)
+      temp=din;
+    else
+      begin
+        dout=temp[0];
+        temp={1'b0, temp[7:1]};
+      end
+  end
+endmodule
+
+module FA(a, b, cin, sum, cout);
+  input a, b, cin;
+  output reg sum, cout;
+  
+  always @(a or b or cin)begin
+    if(cin!==1)
+    {cout, sum} = a + b;
+    else
+    {cout, sum} = a + b + cin;
+  end
+
+endmodule
+
+
+module dff(d, clk, enable, reset, q);
+  input d, clk, enable, reset;
+  output reg q;
+
+  always @ (posedge clk or posedge reset) begin
+    if (reset)
+      q = 0;
+    else
+      if (enable)
+      q = d;
+  end
+endmodule
+

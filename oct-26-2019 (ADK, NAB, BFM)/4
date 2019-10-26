@@ -1,0 +1,43 @@
+// Code your testbench here
+// or browse Examples
+// Code your testbench here
+// or browse Examples
+// Testbench
+
+`include "serial_adder.sv";
+`include  "adder_interface.sv";
+`include  "tb_driver_class.sv";
+
+
+module test;
+
+ serial_adder_if adder_if();
+ 
+
+  
+  // Instantiate design under test
+  serial_adder Serial_adder_inst(.clk(adder_if.clk),.reset(adder_if.reset),.a(adder_if.a), .b(adder_if.b), .shift_load(adder_if.shift_load), .sum(adder_if.sum));
+          
+  initial begin
+	 int iternation=256,i;
+   
+    //create instance of randomize class, then define the iternation number and 		pass,fail counters
+     tb_driver driver = new ();
+     driver.vif=adder_if;
+
+	
+    // Dump waves
+    $dumpfile("dump.vcd");
+    $dumpvars(1,test);
+    
+	//loop through iternation count
+    for (i = 0 ; i < iternation ; i++) begin
+    //generate random value  
+     driver.drive(); // drive signals
+     driver.check(); // check the answers
+	end
+    driver.summary();//view the testbench results summary
+
+    
+  end
+endmodule
